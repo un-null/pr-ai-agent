@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [message, setMessage] = useState();
@@ -15,5 +16,10 @@ export default function Home() {
 
   if (!message) return <p>Loading...</p>;
 
-  return <h1 className="font-bold text-3xl underline">{message}</h1>;
+  return (
+    <div>
+      <h1 className="font-bold text-3xl underline">{message}</h1>
+      <Button variant={"outline"}>Button</Button>
+    </div>
+  );
 }
