@@ -19,7 +19,18 @@ export default function Home() {
   return (
     <div>
       <h1 className="font-bold text-3xl underline">{message}</h1>
-      <Button variant={"outline"}>Button</Button>
+      <Button
+        variant={"outline"}
+        onClick={async () => {
+          const res = await fetch("/api/test", {
+            method: "POST",
+          });
+          const data = await res.json();
+          alert(data.text);
+        }}
+      >
+        Greet
+      </Button>
     </div>
   );
 }
