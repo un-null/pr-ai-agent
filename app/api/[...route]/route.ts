@@ -1,7 +1,8 @@
 import { createXai } from "@ai-sdk/xai";
-import { convertToModelMessages, streamText, type UIMessage } from "ai";
+import { Experimental_Agent as Agent, tool, validateUIMessages } from "ai";
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
+import { z } from "zod";
 
 const app = new Hono().basePath("/api");
 
@@ -9,15 +10,47 @@ const xai = createXai({
   apiKey: process.env.XAI_API_KEY,
 });
 
+let sessionTasks: Array<{
+  id: string;
+  title: string;
+  description: string;
+  createdAt: Date;
+}> = [];
+
+const taskAgent = new Agent({
+  model: xai("grok-3"),
+  system: `You are a helpful assistant that can create tasks for users. When a user asks you to create a task, use the createTask tool to add it to their task list. Be proactive and create tasks when the user mentions things they need to do.`,
+  tools: {
+    createTask: tool({
+      description: "Create a new task with a title and description",
+      inputSchema: z.object({
+        title: z.string().describe("The title of the task"),
+        description: z
+          .string()
+          .describe("The detailed description of the task"),
+      }),
+      execute: async ({ title, description }) => {
+        const task = {
+          id: crypto.randomUUID(),
+          title,
+          description,
+          createdAt: new Date(),
+        };
+        sessionTasks = [...sessionTasks, task];
+
+        console.log("Task created:", task);
+        return task;
+      },
+    }),
+  },
+});
+
 app.post("/chat", async (c) => {
-  const { messages }: { messages: UIMessage[] } = await c.req.json();
+  const { messages } = await c.req.json();
 
-  const result = await streamText({
-    model: xai("grok-3"),
-    messages: convertToModelMessages(messages),
+  return taskAgent.respond({
+    messages: await validateUIMessages({ messages }),
   });
-
-  return result.toUIMessageStreamResponse();
 });
 
 export const POST = handle(app);
