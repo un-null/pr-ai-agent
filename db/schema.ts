@@ -1,12 +1,8 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { account, session, user, verification } from "../auth-schema";
 
-export const users = sqliteTable("users", {
-  id: text("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  name: text("name"),
-  passwordHash: text("password_hash").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-});
+// Re-export Better Auth tables
+export { user, session, account, verification };
 
 export const chats = sqliteTable(
   "chats",
@@ -14,7 +10,7 @@ export const chats = sqliteTable(
     id: text("id").primaryKey(),
     userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
@@ -46,7 +42,7 @@ export const tasks = sqliteTable(
     id: text("id").primaryKey(),
     userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: "cascade" }),
     chatId: text("chat_id").references(() => chats.id, {
       onDelete: "set null",
     }),
